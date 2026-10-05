@@ -1,0 +1,15 @@
+const header = document.querySelector('.site-header');
+const toggle = document.querySelector('.nav-toggle');
+const nav = document.querySelector('.main-nav');
+const topButton = document.querySelector('.back-to-top');
+const onScroll = () => { header.classList.toggle('scrolled', window.scrollY > 24); topButton.classList.toggle('visible', window.scrollY > 500); };
+window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+toggle.addEventListener('click', () => { const open = nav.classList.toggle('open'); toggle.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); });
+nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => { nav.classList.remove('open'); toggle.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }));
+topButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); revealObserver.unobserve(entry.target); } }), { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(element => revealObserver.observe(element));
+const counterObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (!entry.isIntersecting) return; const el = entry.target; const target = Number(el.dataset.counter); const suffix = el.dataset.suffix || ''; const start = performance.now(); const duration = 1100; const animate = now => { const progress = Math.min((now - start) / duration, 1); el.textContent = Math.floor(target * (1 - Math.pow(1 - progress, 3))) + suffix; if (progress < 1) requestAnimationFrame(animate); }; requestAnimationFrame(animate); counterObserver.unobserve(el); }), { threshold: 0.8 });
+document.querySelectorAll('[data-counter]').forEach(counter => counterObserver.observe(counter));
+const form = document.querySelector('#contact-form'); const feedback = document.querySelector('.form-feedback');
+form.addEventListener('submit', async event => { event.preventDefault(); const required = [...form.querySelectorAll('[required]')]; const invalid = required.find(input => !input.checkValidity()); if (invalid) { invalid.focus(); feedback.textContent = 'Completá los campos obligatorios correctamente.'; feedback.className = 'form-feedback error'; return; } const button = form.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Enviando…'; feedback.textContent = ''; try { const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } }); const data = await response.json(); feedback.textContent = data.message; feedback.className = `form-feedback ${data.ok ? 'success' : 'error'}`; if (data.ok) form.reset(); } catch { feedback.textContent = 'Ocurrió un error de conexión. Intentá de nuevo o contactanos por WhatsApp.'; feedback.className = 'form-feedback error'; } finally { button.disabled = false; button.innerHTML = 'Enviar consulta <span aria-hidden="true">→</span>'; } });
